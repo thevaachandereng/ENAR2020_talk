@@ -1,0 +1,800 @@
+\documentclass[12pt,t]{beamer}
+\usepackage{graphicx}
+\setbeameroption{hide notes}
+\setbeamertemplate{note page}[plain]
+\usepackage{xmpmulti}
+\usepackage{amssymb}
+\usepackage{animate}
+\usepackage{mathtools}
+% get rid of junk
+\usetheme{default}
+\beamertemplatenavigationsymbolsempty
+\hypersetup{pdfpagemode=UseNone} % don't show bookmarks on initial view
+
+% font
+\usepackage{fontspec}
+\setsansfont{TeX Gyre Heros}
+\setbeamerfont{note page}{family*=pplx,size=\footnotesize} % Palatino for notes
+% "TeX Gyre Heros can be used as a replacement for Helvetica"
+% In Unix, unzip the following into ~/.fonts
+% In Mac, unzip it, double-click the .otf files, and install using "FontBook"
+%   http://www.gust.org.pl/projects/e-foundry/tex-gyre/heros/qhv2.004otf.zip
+
+% named colors
+\definecolor{offwhite}{RGB}{249,242,215}
+\definecolor{foreground}{RGB}{255,255,255}
+\definecolor{background}{RGB}{24,24,24}
+\definecolor{title}{RGB}{107,174,214}
+\definecolor{gray}{RGB}{155,155,155}
+\definecolor{subtitle}{RGB}{102,255,204}
+\definecolor{hilight}{RGB}{102,255,204}
+\definecolor{vhilight}{RGB}{255,111,207}
+\definecolor{lolight}{RGB}{155,155,155}
+%\definecolor{green}{RGB}{125,250,125}
+
+% use those colors
+\setbeamercolor{titlelike}{fg=title}
+\setbeamercolor{subtitle}{fg=subtitle}
+\setbeamercolor{institute}{fg=gray}
+\setbeamercolor{normal text}{fg=foreground,bg=background}
+\setbeamercolor{item}{fg=foreground} % color of bullets
+\setbeamercolor{subitem}{fg=gray}
+\setbeamercolor{itemize/enumerate subbody}{fg=gray}
+\setbeamertemplate{itemize subitem}{{\textendash}}
+\setbeamerfont{itemize/enumerate subbody}{size=\footnotesize}
+\setbeamerfont{itemize/enumerate subitem}{size=\footnotesize}
+\setbeamercolor*{section in toc}{fg=white}
+
+% page number
+\setbeamertemplate{footline}{%
+    \raisebox{5pt}{\makebox[\paperwidth]{\hfill\makebox[20pt]{\color{gray}
+          \scriptsize\insertframenumber}}}\hspace*{5pt}}
+
+% add a bit of space at the top of the notes page
+\addtobeamertemplate{note page}{\setlength{\parskip}{12pt}}
+
+% a few macros
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+\newcommand{\ig}{\includegraphics}
+\newcommand{\subt}[1]{{\footnotesize \color{subtitle} {#1}}}
+
+% title info
+\title{Robust Designs for Response-Adaptive Randomization}
+\subtitle{ENAR 2020}
+\author{\href{https://thevaachandereng.github.io/}{Thevaa Chandereng}}
+\institute{\href{https://www.biostat.wisc.edu}{Biostatistics \& Medical Informatics} \\[2pt] \href{http://www.wisc.edu}{University of Wisconsin{\textendash}Madison}}
+\date{\href{Joint work with Rick Chappell}{\tt \scriptsize Joint work with Rick Chappell}
+\\[-4pt]
+\href{https://github.com/thevaachandereng}{\tt \scriptsize github.com/thevaachandereng}
+\\[-4pt]
+%\href{https://twitter.com/tchandereng}{\tt \scriptsize @tchandereng}
+}
+
+
+\begin{document}
+
+
+
+% title slide
+{
+\setbeamertemplate{footline}{} % no page number here
+\frame{
+  \titlepage
+  \note{These are slides for a talk I will give on 30 Oct 2014, at a
+    symposium on scholarly publishing.
+
+    I'm a statistician. My research focuses on genetics, and
+    most of my papers are in genetics journals.
+
+    So in commenting on open access, I'm focusing on scientific
+    publications, and perhaps more narrowly, on the biological
+    sciences.
+} } }
+
+
+\section{Introduction to RAR}
+
+\begin{frame}{What is a Response Adaptive Randomization (RAR) Design?}
+
+\bi
+\itemsep6pt
+\item RAR designs utilize accumulating information on outcomes as the trial progresses in order to alter the treatment assignment probabilities and assign more patients to the better-performing treatment arm.
+\item Previous outcomes are used to tilt the randomization probabilities in favor of the treatment currently observed to have superior results.
+\item \onslide<2->{{\color<2->{vhilight} The trial needs to be short to be able to obtain the outcome of the trial for future randomization}}
+\ei
+    
+\end{frame}
+
+
+\section{Time-Trends in Clinical Trials and How it affects RAR?}
+
+\begin{frame}{What is the issue with RAR?}
+Peto (1985): \\
+“ . . . patients entering a trial are often not uniform in prognosis.  For example, both in the European Coronary Bypass Trial and in the Medical Research Council’s 8th Acute Myeloid Leukaemia Trial {\color{vhilight} there was a statistically significant trend} towards better prognosis as time went by.  If, therefore, there had also been a trend in allocation proportions towards the apparently better treatment, an appreciable bias might have been engendered.”
+
+\vspace{12pt}
+
+{\color{hilight} Time- Trends in Clinical Trials!}
+
+\end{frame}
+
+
+
+\begin{frame}{Why Time-trends are Common?}
+
+\vspace{12pt}
+\bi
+\itemsep18pt
+\item {The disease itself can change, sometimes radically (e.g., AIDS in the early 1990s).}
+\item \onslide<2->{Our definition of the disease can change due to new scientific discoveries or diagnostic methods (e.g., stage migration in nasopharyngeal carcinoma due to the introduction of CAT scans to Hong Kong ~ 2005).}
+\item \onslide<3->{Inclusion criteria can change, either formally (in which case we can stratify analysis on before vs. after the change) or informally due to “recruiting zeal” or other issues (in which case we can’t).}
+\ei
+
+\end{frame}
+
+
+
+\begin{frame}{Time-trends in RAR}
+\vspace{24pt}
+\bi
+\itemsep8pt
+\item Thall et al. (2015) investigated type-I error under a {\color{hilight} linear time-trend induced} in the traditional response-adaptive randomization design and showed that the type-I error is significantly above the nominal level.
+\ei
+\end{frame}
+
+
+
+
+\section{BATTLE-1 Trial}
+
+\begin{frame}{BATTLE-1 Trial}
+
+Biomarker-integrated Approaches of Targeted Therapy for Lung Cancer Elimination (BATTLE - 1)
+
+\begin{minipage}[t]{0.48\linewidth}
+\begin{figure}
+\ig[height=0.65\textheight]{Images/umbrella.png}
+\end{figure}
+\end{minipage}\hfill
+\onslide<2->{
+\begin{minipage}[t]{0.48\linewidth}
+\bi
+\itemsep8pt
+\item 4 treatments, 5 biomarker;
+\item primary end point, 8-week disease control rate;
+\item treat more patients in promising groups based on biomarker profile;
+\item suspend ineffective groups early
+\ei
+\end{minipage}
+}
+    
+\end{frame}
+
+
+
+\begin{frame}{BATTLE-1 Trial}
+
+\vspace{36pt}
+\onslide<2->{
+{\color{hilight}``More smokers enrolled in the latter part of the study compared to the beginning of the study''.  }}
+
+\vspace{24pt}
+\onslide<3->{
+Time trends are nearly universally ignored among RAR proponents.
+  }
+\end{frame}
+
+
+
+\section{Blocked RAR}
+
+\begin{frame}{Blocked Design for RAR}
+\vspace{12pt}
+\bi
+\itemsep6pt
+\item Group-sequential procedure.
+\item Update allocation ratio for groups rather than patients.
+\ei
+\vspace{12pt}
+\centering
+\ig[height=0.45\textheight]{Images/groupsequential.png}
+
+\end{frame}
+
+\begin{frame}{Simulation Setup}
+\vspace{12pt}
+\bi
+\itemsep12pt
+\item $N$ = 200 subjects  
+\item $K$ = 1, 2, 4, 5, 10, 20, 100, 200. 
+\item 10,000 independent simulations were performed 
+\item $p_A$ is set to 0.25, $p_B$ is set to 0.25 (null case), 0.45.
+\item Run-in period of 20 patients (fixed randomization).
+\item Allocation probability bounded between 0.2 and 0.8.
+\ei
+\end{frame}
+
+
+\begin{frame}{Simulation Setup}
+\vspace{12pt}
+To examine the effects of time-trends, we increased both $p_A$ and $p_B$ linearly from their initial values to a final value of 0.25 larger. 
+\bi
+\itemsep12pt
+\item $p_A(n) = 0.25 + 0.25(n / N)$, where $n$ is the patient that have been accrued and $N$ is the total sample size. 
+\item for null case, $p_B(n) = 0.25 + 0.25(n / N)$.
+\item for alternative case, $p_B(n) = 0.45 + 0.25(n / N)$.
+\ei
+\end{frame}
+
+
+\begin{frame}{Simulation Setup: Bayesian Design}
+\bi
+\itemsep12pt
+\item The probability of randomizing subjects to treatment A in stratum j, $\pi_{j, A}$ is defined as
+$$\pi_{j, A} = \frac{(p_{A>B, j - 1} (data))^ {n/2N}}{(p_{A>B, j - 1} (data))^ {n/2N} + (p_{B>A, j - 1} (data))^ {n/2N}},$$
+where $p_{A > B, j - 1}(data)$ is the posterior probability that treatment A has a higher success rate than  treatment B, $p_{A>B, j - 1} (data)) = 1 - p_{B>A, j - 1} (data))$ after the $j - 1 ^{st}$ block, $n$ is the number of accrued patients and $N$ is the maximum sample size. . 
+\item Beta-binomial conjugate prior is used with $\mathcal{B}eta(0.5, 0.5)$ priors.
+\ei
+\end{frame}
+
+\begin{frame}{Simulation Setup: Bayesian Design}
+\bi
+\itemsep12pt
+\item If treatment B is selected to be better than treatment A, then if $P_{B > A}(data) > .99$, the trial is stopped early for success and if $P_{B>A}(data) < .01$, the trial is stopped early for failure. 
+\item For non-stratified design, where $K$ = 1, 200, if the final posterior probability $P_{B > A}(data) > .95$, then treatment B is declared superior to treatment A. 
+\item For stratified design by block, Bayesian logistic regression was implemented to estimate the posterior probability of treatment difference and block effects. 
+\ei
+\end{frame}
+
+\section{Results \& Discussion}
+
+
+\begin{frame}{Simulation}
+A single simulation for RAR with $p_A = 0.07$, $p_B = 0.05$ with N of 1000 and 50 number of blocks.
+\vspace{6pt}
+
+\centerline{
+\transduration<0-19>{2}
+        \multiinclude[<+->][format=png, graphics={width=0.75\textheight}]{Images/RAR/frame}}
+
+%\animategraphics[loop,controls,width=0.5\linewidth]{1}{Images/RAR/frame-}{0}{19}
+ 
+%\begin{figure}
+%    \centerline{
+%\ig[height=0.75\textheight]{Images/RAR.png}
+%}
+%\caption{Randomization probability for $p_A = 0.07$, $p_B = 0.05$ with a sample size of 1000.}
+%\end{figure}
+    
+\end{frame}
+
+
+\begin{frame}{Results using Bayesian Approach: With Drift}
+\begin{table}[ht]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+ Block & Type I error & Bias & E(N) & $\pi_{20}$ & $N_B - N_A$ \\
+\hline
+   FR & 0.05 & 0.00 & 180 & 0.06 & 0.27 (-28, 28) \\ 
+   2 & 0.05 & 0.00 & 178 & 0.20 & -0.14 (-48, 48) \\ 
+   4 & 0.07 & 0.00 & 178 & 0.24 & -0.09 (-56, 58) \\ 
+   5 & 0.08 & 0.00 & 180 & 0.25 & 0.03 (-58, 58) \\ 
+   10 & 0.08 & 0.00 & 179 & 0.27 & -0.39 (-62, 62) \\ 
+   20 & 0.08 & 0.02 & 179 & 0.27 & 0.01 (-62, 62) \\ 
+   100 & 0.03 & 0.01 & 177 & 0.25 & 0.02 (-60, 60) \\ 
+   trad RAR & 0.16 & 0.00 & 175 & 0.26 & -0.24 (-60, 60) \\ 
+\hline
+\end{tabular}
+}
+\caption{RAR using Bayesian approach and with 0.25 drift. $E(N)$ represents the mean sample size.  $\pi_{20} = P(N_A -N_B > 20)$. $N_A$ and $N_B$ denotes the number of patients assigned to treatment A and B. The mean (2.5\%, 97.5\%) of $N_B - N_A$ is reported.}
+\label{bayesnoearlystopwdrift}
+\end{table}
+
+\end{frame}
+
+
+\begin{frame}{Results using Bayesian Approach: With Drift}
+\begin{table}[ht]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+ Block & Power & Bias & E(N) & $\pi_{20}$ & $N_B - N_A$ \\
+\hline
+    FR & 0.88 & 0.01 & 98 & 0.07 & -0.13 (-28, 28) \\ 
+    2 & 0.88 & 0.02 & 98 & 0.01 & 18.46 (-18, 62) \\ 
+    4 & 0.88 & 0.03 & 99 & 0.01 & 20.91 (-12, 68) \\ 
+    5 & 0.89 & 0.04 & 99 & 0.00 & 21.48 (-10, 68) \\ 
+    10 & 0.87 & 0.05 & 99 & 0.00 & 20.9 (-8, 68) \\ 
+    20 & 0.87 & 0.06 & 98 & 0.00 & 19.36 (-8, 68) \\ 
+    100 & 0.35 & -0.07 & 97 & 0.00 & 16.5 (-8, 66) \\ 
+    trad RAR & 0.95 & 0.08 & 93 & 0.00 & 15.4 (-9, 64) \\ 
+\hline
+\end{tabular}
+}
+\caption{RAR using Bayesian approach and with 0.25 drift. $E(N)$ represents the mean sample size.   $\pi_{20} = P(N_A -N_B > 20)$. $N_A$ and $N_B$ denotes the number of patients assigned to treatment A and B. The mean (2.5\%, 97.5\%) of $N_B - N_A$ is reported.}
+\label{bayesnoearlystopwdrift2}
+\end{table}
+\end{frame}
+
+
+
+\begin{frame}{Discussion}
+\bi
+\itemsep12pt
+\item Blocks with a large number of patients also help reduce the large probability of imbalance in the wrong direction, where more patients are assigned to the inferior treatment compared to traditional RAR. 
+\item Blocks with fewer patients can reduce the power of the trial because if patients are not randomized to both treatments in a block, the block becomes uninformative. 
+\item Small number of blocks (K = 2, 4 and 5) has a good tradeoff between efficiency and ethically treating patients to the best known superior treatment.
+\ei
+\end{frame}
+
+\begin{frame}{Discussion}
+\bi
+\itemsep12pt
+\item Large number of blocks should be clearly avoided for both ethical reason and poor design.
+\item Statisticians need to be careful with issues of time-trend and methods to alter the randomization ratio.
+\item Time-trend can significantly impact the type-I error rate.
+\item R package \textbf{blockRAR}
+\ei
+\end{frame}
+
+
+
+\begin{frame}{Acknowledgement}
+\bi
+\itemsep6pt
+\item Rick Chappell (UW-Madison)
+\item David DeMets (UW-Madison)
+\item Peter Thall (MD Anderson)
+\ei
+\end{frame}
+
+
+\begin{frame}{References}
+\bi
+\itemsep12pt
+\item Karrison TG, Huo D and Chappell R. A group sequential, response-adaptive design for randomized clinical trials. Controlled Clinical Trials 2003; 24(5): 506–522.
+
+\item Thall P, Fox P and Wathen J. Statistical controversies in clinical research: scientific and ethical problems with adaptive randomization in comparative clinical trials. Annals of Oncology 2015; 26(8): 1621–1628.
+
+\item Bashir Q, Munsell MF, Giralt S et al. Randomized phase ii trial comparing two dose levels of thymoglobulin in patients undergoing unrelated donor hematopoietic cell transplant. Leukemia \& lymphoma 2012; 53(5): 915–919.
+\ei
+\end{frame}
+
+
+\begin{frame}
+\vspace{72pt}
+\begin {center}
+\textbf{THANK YOU!}
+\end{center}
+\end{frame}
+%
+%\begin{frame}{Access in action}
+%\subt{Interesting reference}
+%
+%\bigskip
+%\centerline{
+%\ig[height=0.75\textheight]{Images/img01.jpg}
+%}
+%
+%\note{I'll begin with an illustration of what I mean by
+%  access.
+%
+%  Some time back, I was reading a manuscript and saw an
+%  article of interest.}
+%\end{frame}
+%
+%
+%\begin{frame}{Access in action}
+%\subt{Google Scholar}
+%
+%\bigskip
+%\begin{center}
+%\ig[width=0.70\textwidth]{Images/img02.jpg}
+%
+%\onslide<2> {
+%  \vspace*{-0.55\textheight}
+%  \hspace*{0.15\textwidth}
+%  \ig[width=0.70\textwidth]{Images/img03.jpg}
+%}
+%\end{center}
+%
+%\note{If I paste the article title into Google Scholar, I immediately
+%  find the paper and can go directly to the journal.
+%
+%  But I was sitting at home on my couch.
+%
+%  And they charge \$40 for a 7 page paper!
+%
+%  I could get the article through the UW Libraries web site, but it's
+%  a bit of a hassle.}
+%\end{frame}
+%
+%
+%
+%
+%\begin{frame}{What's the deal with the prices?}
+%
+%\vspace{24pt}
+%
+%{\scriptsize \color{gray}
+%\renewcommand{\arraystretch}{3}
+%\begin{tabular}{p{3.2in}@{\hspace*{1cm}}l}
+%Broman K, Speed T, Tigges M ({\color{white} 1996}) Estimation of antigen-responsive T
+%cell frequencies in PBMC from human subjects. {\color{white} \mbox{J Immunol Meth}} 198:119{\textendash}132
+%& {\color{vhilight} \footnotesize \$39.95}  \\
+%Broman KW, Weber JL ({\color{white} 1999}) Method for constructing confidently ordered
+%linkage maps. {\color{white} Genet Epidemiol} 16:337{\textendash}343  & {\color{vhilight}
+% \footnotesize   \$35.00} \\
+%Broman KW, Feingold E ({\color{white} 2004}) SNPs made routine. {\color{white} Nat Methods} 1:104{\textendash}105
+%& {\color{vhilight} \footnotesize  \$18.00} \\
+%Broman KW ({\color{white} 2005}) Mapping expression in randomized rodent
+%genomes. {\color{white} Nat Genet} 37:209{\textendash}210 & {\color{vhilight} \footnotesize  \$18.00}
+%\end{tabular}
+%}
+%
+%\note{I went back to some of my early papers, and found these
+%  outrageous prices.
+%
+%  \$18 for a 2-page paper?
+%
+%  I understand that the publishing industry has a long history of
+%  screwy pricing, but you'd have to be either \textbf{desperate} or
+%  \textbf{stupid} to pay this.
+%
+%  And for that 1999 Genetic Epidemiology article, published by Wiley,
+%  you have to register in order to find out that it's \$35 for just 24
+%  hours of access.
+%}
+%\end{frame}
+%
+%
+%
+%\begin{frame}{Access in action}
+%\subt{There's also PubMed}
+%
+%\bigskip
+%\begin{center}
+%\ig[width=0.7\textwidth]{Images/img13.png}
+%
+%
+%\onslide<2>{
+%  \vspace*{-0.45\textheight}
+%  \hspace*{0.55\textwidth}
+%  \ig[width=2in]{Images/free_in_pmc.png}
+%}
+%
+%\end{center}
+%
+%\note{If I'd used PubMed rather than Google Scholar, I could have
+%  gotten to the published paper in just a few clicks, because the
+%  manuscript is in PubMed Central.
+%
+%  PubMed Central is only for federally-funded research, has a one year
+%  embargo, and (as here) might not include the published version of the
+%  paper.
+%
+%  PubMed Central is a good thing, but one generally can't wait a year,
+%  it's unfortunate that the published versions aren't always included,
+%  and from an author's point of view it can be a real hassle.
+%}
+%\end{frame}
+%
+%
+%\begin{frame}{Another example}
+%
+%\bigskip
+%
+%\begin{center}
+%
+%\hspace{-0.15\textwidth}
+%\ig[height=0.7\textheight]{Images/feingold_pubmed.png}
+%
+%\onslide<2->{
+%  \vspace*{-0.65\textheight}
+%  \hspace*{-0.10\textwidth}
+%  \ig[height=0.75\textheight]{Images/feingold_paywall.png}
+%}
+%
+%\onslide<3->{
+%  \vspace*{-0.87\textheight}
+%  \hspace*{0.38\textwidth}
+%  \ig[height=0.92\textheight]{Images/feingold_paper.png}
+%}
+%
+%\onslide<4->{
+%  \vspace*{-0.35\textheight}
+%  \hspace*{0.29\textwidth}
+%  \ig[height=0.35\textheight]{Images/feingold_appendix_url.png}
+%}
+%
+%\onslide<5>{
+%  \vspace*{-0.90\textheight}
+%  \hspace*{0.48\textwidth}
+%  \ig[height=0.85\textheight]{Images/feingold_paywall2.png}
+%}
+%
+%\note{As another example, I was interested a paper from the Journal of
+%  Dental Research.
+%
+%  It's less than a year old, so it's not available in PubMed
+%  Central.
+%
+%  I ordered a copy by inter-library loan, but it didn't include the
+%  supplemental methods, and those are behind a paywall at the journal!
+%}
+%\end{center}
+%
+%\end{frame}
+%
+%\begin{frame}{Twitter is useful}
+%\subt{(for venting\only<2>{ and more})}
+%
+%\bigskip
+%
+%\begin{center}
+%
+%\ig[height=0.5\textheight]{Images/feingold_tweet.jpg}
+%
+%\onslide<2->{
+%  \vspace*{-0.70\textheight}
+%  \hspace*{0.40\textwidth}
+%  \ig[height=0.95\textheight]{Images/feingold_appendix.png}
+%}
+%\end{center}
+%
+%\note{I was reduced to venting on twitter.
+%
+%  But then I got the appendix I wanted by email (twice!), within an
+%  hour of my tweet. (Thanks, MM and KW!)
+%}
+%
+%\end{frame}
+%
+%\begin{frame}[c]{Twitter is useful}
+%
+%\centerline{\Huge {\#}icanhazpdf}
+%
+%\note{If you search twitter for {\#}icanhazpdf, you'll find lots of
+%  people asking for copies of articles. Quite effective.}
+%\end{frame}
+%
+%\begin{frame}{It's all about money}
+%\subt{(Costs in scientific publishing)}
+%
+%\vspace{24pt}
+%
+%\bi
+%\item {\color<3| handout 0>{hilight} Research}
+%\item {\color<3| handout 0>{hilight} Writing}
+%\item {\color<3| handout 0>{hilight} Peer review, editorial oversight}
+%\item {\color<4| handout 0>{hilight} Journal administration}
+%\item {\color<4| handout 0>{hilight} Copy editing, typesetting}
+%\item {\color<4| handout 0>{hilight} Distribution}
+%\item<2-> {\color<2| handout 0>{vhilight} \color<4| handout 0>{hilight} Profit}
+%\ei
+%
+%\note{Open access is all about money.
+%
+%Most of the costs behind a research paper are paid by grants or
+%institutional funds. For most journals, peer review and editorial
+%oversight are unpaid.
+%
+%There are real costs associated with journals, but in the end they are
+%all paid from the same sources (grants and institutional funds).
+%
+%Do we really want to give away the product of our research and then
+%buy it back repeatedly, at great profit to the publishers?
+%
+%And shouldn't the literature be available generally and not just to
+%those with access to well-funded research libraries?
+%}
+%\end{frame}
+%
+%\begin{frame}{It's not about}
+%
+%\vspace{36pt}
+%
+%\bi
+%\itemsep6pt
+%\item {Peer review}
+%\item {Predatory publishing}
+%\item {\color<2->{vhilight} Impact factors}
+%\item {\color<2->{vhilight} Evaluating researchers} \\
+%{\footnotesize \color{gray} (for grants \& promotions)}
+%\ei
+%
+%\vspace{36pt}
+%
+%\onslide<2->{ \color{hilight} Well, it sort of is\dots }
+%
+%\note{The Open Access discussion often gets tied up with discussion
+%  about peer review, predatory publishing, and journal impact
+%  factors.
+%
+%  But to me, it is a completely separate issue, whether we want
+%  stringent peer review before publication or instead leave the
+%  evaluation entirely to post-publication review.
+%
+%  On the other hand, the current culture is to evaluate researchers
+%  based on the perceived quality of the journals in which they've
+%  published. This makes it difficult to change to open access.
+%
+%  If everyone's still going to send their best work to Science,
+%  Nature, \& Cell, then that work will continue to be locked up behind
+%  pay walls.
+%}
+%\end{frame}
+%
+%\begin{frame}{Paying for it}
+%
+%\vspace{36pt}
+%
+%\bi
+%\itemsep12pt
+%\item Traditional approach
+%\bi
+%\item subscriptions
+%\item page charges
+%\ei
+%\item Open access
+%\bi
+%\item bigger page charges
+%\item submission charges?
+%\ei
+%\onslide<2->{
+%\item Endowments
+%\item Direct grants to journals
+%}
+%\ei
+%
+%\note{The usual way in which publishing costs are paid are through a
+%  combination of subscriptions (both institutional and individual) and
+%  direct charges to the author.
+%
+%  In the new open access model, the page charges are increased in
+%  order to eliminate the subscription fees. One might have a fee for
+%  all submitted manuscripts and not just those accepted for
+%  publication.
+%
+%  I've not seen much discussion of other alternatives, but I would
+%  prefer to see endowments established, particularly for
+%  society journals.  Alternatively, journals might be
+%  funded directly through grants.
+%}
+%\end{frame}
+%
+%
+%\begin{frame}{Invoice}
+%
+%\bigskip
+%\begin{center}
+%\ig[height=0.75\textheight]{Images/invoice3.jpg}
+%
+%
+%\onslide<2>{
+%  \vspace*{-0.35\textheight}
+%  \ig[width=\textwidth]{Images/invoice3_clip.jpg}
+%}
+%\end{center}
+%
+%\note{Here's an invoice for a paper I published in 2012.
+%
+%  The charges would have been ``just'' \$1700, but I paid an
+%  additional \$1200 to have it freely available (otherwise it would
+%  have been behind a pay wall for one year).
+%}
+%\end{frame}
+%
+%
+%
+%
+%
+%
+%\begin{frame}{Choices for young investigators}
+%
+%\vspace{36pt}
+%
+%\bi
+%\item Pay for open access
+%\item Support young open access journals
+%
+%\vspace*{12pt}
+%
+%\hspace{2cm} {\color{vhilight} \sc or}
+%
+%\vspace*{12pt}
+%
+%\item Let subscribers pay \& do more experiments
+%\item Continue to go after Science, Nature, \& Cell
+%\ei
+%
+%\note{The page charges, and the continued reliance on impact factors,
+%  lead to difficult choices, particularly for young investigators.
+%
+%  Should I pay for open access, or should I let the subscribers pay
+%  and use the savings to do more experiments?
+%
+%  Should I support open access journals, or should I continue to
+%  go after Science, Nature, \& Cell?
+%
+%  The best scientists may confidently maintain their pure publication
+%  record.
+%
+%  But more mediocre scientists, who may be just scraping by,
+%  probably don't feel they have that luxury.  A Nature paper can
+%  ``make you.''
+%}
+%\end{frame}
+%
+%
+%\begin{frame}{What can we do?}
+%
+%\vspace{36pt}
+%
+%\bi
+%\itemsep12pt
+%\item Send our best work to open access journals
+%\item Support junior faculty to keep their papers open
+%\item Pay attention to the quality of the work
+%\bi
+%\item[] (not the impact factor of the journal)
+%\ei
+%\item Raise endowments for trusted journals
+%\item {\color<2>{vhilight} Reform copyright law}
+%\ei
+%
+%\note{We need to send our best work to open access journals.
+%
+%We need to find ways to support our junior colleagues, so that they
+%may do so as well.
+%
+%We need to evaluate people based on their work and not by the name of
+%the journal in which it appeared. We all may say, ``Science and
+%Nature are often crap and there are lots of fantastic papers that
+%appear elsewhere.'' But somehow when we see Nature or Cell on
+%someone's CV, we still have an immediate, positive reaction.
+%
+%I would like to see endowed journals, open forever.
+%
+%The quickest way to free the product of federally funded research
+%would be to reform copyright law. If the product of our research were
+%forced open by law, the publishing industry would figure out how to
+%pay for it in short order.
+%
+%But given the state of politics in the US, I'm not too optimistic
+%about that.
+%}
+%\end{frame}
+%
+%{\setbeamertemplate{footline}{}
+%
+%\begin{frame}
+%\end{frame}
+%
+%\begin{frame}{Discussion questions}
+%
+%\vspace{12pt}
+%
+%{\small
+%\bi
+%\itemsep12pt
+%    \item {\color{lolight} \footnotesize There is an emerging consensus to allow (or
+%      even require) self-archiving for the final version of the
+%      author's peer-reviewed manuscript, and to give the publisher
+%      exclusivity for the published edition.} \\
+%      Is this a problem for the researchers that use the content?
+%    \item How to encourage researchers to publish in open access
+%      journals? How to help with publication charges?
+%    \item Should we change how we evaluate scholars, for hiring and
+%      promotion?
+%    \item Should we give campus authors a chance to "opt-out" of any
+%      institutional mandate for open access?
+%  \ei
+%}
+%
+%\end{frame}
+
+%}
+\end{document}
